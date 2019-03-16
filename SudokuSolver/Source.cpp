@@ -21,15 +21,6 @@ struct BoardSpace
 	BoardSpace(uint8_t _x, uint8_t _y) : x(_x), y(_y) {};
 };
 
-struct Move
-{
-	uint8_t x;
-	uint8_t y;
-	uint8_t value;
-
-	Move(uint8_t _x, uint8_t _y, uint8_t _value) : x(_x), y(_y), value(_value) {};
-};
-
 bool checkRowForValue(uint8_t value, uint8_t row, const uint8_t(&board)[9][9])
 {
 	for (uint8_t col = 0; col < 9; col++)
