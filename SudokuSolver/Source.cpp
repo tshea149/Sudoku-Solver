@@ -12,7 +12,7 @@
 struct BoardSpace
 {
 	// board coordinates range from 0 - 8
-	// possible values from a space range from 1 - 9
+	// possible values for a space range from 1 - 9
 	// smallest addressable value in C++ : 1 byte (uint8_t / char)
 	uint8_t x, y;
 	std::queue<uint8_t> possible_values;
