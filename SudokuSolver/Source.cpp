@@ -71,8 +71,8 @@ bool checkSectionForValue(uint8_t value, uint8_t row, uint8_t col, const uint8_t
 }
 
 // Parameter 1/2 : x/y coordinate of board space of which to check moves for 
-// Parameter 3 : const reference to board
-// no return. After call, board_space.possible_values will contain all valid moves for the given position
+// Parameter 3 : current board state
+// Returns BoardSpace struct updated to contain all possible moves for the requested board space
 BoardSpace getMoveValues(const uint8_t x, const uint8_t y, const uint8_t(&board)[9][9])
 {
 	// space.x/space.y represent which board row/column to look at respectively
@@ -99,8 +99,8 @@ BoardSpace getMoveValues(const uint8_t x, const uint8_t y, const uint8_t(&board)
 	return board_space;
 }
 
-// returns a BoardSpace containing a queue of all possible values for the best move on the given board state
-// returned BoardSpace.possible_values will be empty if no possible moves exist
+// Parameter 1: Reference of best_move BoardSpace container to store the best move.
+// Returns true if no spaces remain (puzzle is solved), or false if puzzle is not solved or is in an unsolvable state
 bool getBestBoardSpace(BoardSpace &best_move, const uint8_t(&board)[9][9])
 {
 	for (uint8_t i = 0; i < 10; i++)
@@ -125,7 +125,7 @@ bool getBestBoardSpace(BoardSpace &best_move, const uint8_t(&board)[9][9])
 					}
 
 					if (move.possible_values.size() < best_move.possible_values.size())
-						best_move = move;
+						best_move = move;	// better move found than current best
 				}
 				else
 				{
@@ -143,8 +143,7 @@ bool getBestBoardSpace(BoardSpace &best_move, const uint8_t(&board)[9][9])
 	return true;	// no best move or space with 0 moves were found. puzzle must be complete.
 }
 
-// solveBoard will hold the last move coordinates, so that the board space can be set to empty if backtracking is necessary
-// returns false if the board is in an unsolvable state
+// returns false if the board is in an unsolvable state, true if the board has been solved
 bool solveBoard(uint8_t(&board)[9][9])
 {
 	// get best space based on current board state and check if puzzle is complete
