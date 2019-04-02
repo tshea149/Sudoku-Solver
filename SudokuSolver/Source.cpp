@@ -9,10 +9,12 @@
 #include <ctype.h>
 /**/
 
+#define uint8_t int
+
 struct BoardSpace
 {
 	// board coordinates range from 0 - 8
-	// possible values for a space range from 1 - 9
+	// possible values from a space range from 1 - 9
 	// smallest addressable value in C++ : 1 byte (uint8_t / char)
 	uint8_t x, y;
 	std::queue<uint8_t> possible_values;
@@ -21,70 +23,50 @@ struct BoardSpace
 	BoardSpace(uint8_t _x, uint8_t _y) : x(_x), y(_y) {};
 };
 
-bool checkRowForValue(uint8_t value, uint8_t row, const uint8_t(&board)[9][9])
-{
-	for (uint8_t col = 0; col < 9; col++)
-	{
-		if (board[row][col] == value)
-			return true;
-	}
-
-	return false; // value not found
-}
-
-bool checkColumnForValue(uint8_t value, uint8_t col, const uint8_t(&board)[9][9])
-{
-	for (uint8_t row = 0; row < 9; ++row)
-	{
-		if (board[row][col] == value)
-			return true;
-	}
-
-	return false; // value not found
-}
-
-bool checkSectionForValue(uint8_t value, uint8_t row, uint8_t col, const uint8_t(&board)[9][9])
-{
-	// determine which 3x3 section to check
-	uint8_t search_row = row - (row % 3);
-	uint8_t search_col = col - (col % 3);
-
-	for (uint8_t i = search_row; i < search_row + 3; ++i)
-	{
-		for (uint8_t j = search_col; j < search_col + 3; ++j)
-		{
-			if (value == board[i][j])
-				return true;
-		}
-	}
-
-	return false; // value not found
-}
-
 // Parameter 1/2 : x/y coordinate of board space of which to check moves for 
 // Parameter 3 : current board state
 // Returns BoardSpace struct updated to contain all possible moves for the requested board space
 BoardSpace getMoveValues(const uint8_t x, const uint8_t y, const uint8_t(&board)[9][9])
 {
-	// space.x/space.y represent which board row/column to look at respectively
-
 	// a value for the space is possible if it is not found in the approprate row, column, and section
 	//	if a value is found within row, column, or section, the value is not possible and checking other spaces is a waste of time
 
-	BoardSpace board_space(x, y);
+	// holds 10, because a board space with value 0 represents a blank space. Must be able to index 0 - 9 (10 indexes)
+	// assume a move is possible until proven otherwise
+	bool is_possible_arr[10] = {
+		true, true, true,
+		true, true, true,
+		true, true, true,
+		true
+	};
 
-	for (uint8_t value = 1; value <= 9; ++value)
+	// board[row][col]		quick reference for array layout
+
+	// iterate over rows, columns, and sections, marking off values that appear in the array
+	// check row
+	for (uint8_t col = 0; col < 9; ++col)
+		is_possible_arr[board[x][col]] = false;	// set index of array for possible values (obtained by the value at a board space in the row) to false
+
+	// check column
+	for (uint8_t row = 0; row < 9; ++row)
+		is_possible_arr[board[row][y]] = false;
+
+	// check section
+	int8_t search_row = x - (x % 3);
+	uint8_t search_col = y - (y % 3);
+	for (uint8_t i = search_row; i < search_row + 3; ++i)
 	{
-		if (false == checkRowForValue(value, x, board))
+		for (uint8_t j = search_col; j < search_col + 3; ++j)
 		{
-			if (false == checkColumnForValue(value, y, board))
-			{
-				if (false == checkSectionForValue(value, x, y, board))
-				{
-					board_space.possible_values.push(value); // value is valid for the space, add it to the queue
-				}
-			}
+			is_possible_arr[board[i][j]] = false;
 		}
+	}
+
+	BoardSpace board_space(x, y);
+	for (uint8_t i = 1; i < 10; ++i)
+	{
+		if (true == is_possible_arr[i])
+			board_space.possible_values.push(i);
 	}
 
 	return board_space;
@@ -94,7 +76,7 @@ BoardSpace getMoveValues(const uint8_t x, const uint8_t y, const uint8_t(&board)
 // Returns true if no spaces remain (puzzle is solved), or false if puzzle is not solved or is in an unsolvable state
 bool getBestBoardSpace(BoardSpace &best_move, const uint8_t(&board)[9][9])
 {
-	for (uint8_t i = 0; i < 10; i++)
+	for (uint8_t i = 0; i < 10; ++i)
 		best_move.possible_values.push(i);	// initialize best possible move to bad (and impossible) case for move comparisons
 
 	BoardSpace move;
@@ -168,7 +150,7 @@ bool solveBoard(uint8_t(&board)[9][9])
 
 void printBoard(uint8_t(&board)[9][9])
 {
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; ++i)
 	{
 		if (i % 3 == 0 && i != 0)
 			std::cout << "------+-------+------\n";
@@ -255,6 +237,5 @@ int main(int argc, char* argv[])
 	std::cout << "\n\n   Solved Puzzle\n---------------------" << std::endl;
 	printBoard(puzzle);
 	std::cout << "\nTime taken: " << time_taken << "  microseconds." << std::endl;
-
 	return 0;
 }
